@@ -1,4 +1,4 @@
-const CACHE_NAME = 'linzess-v2';
+const CACHE_NAME = 'linzess-v3';
 const ASSETS = [
   '/linzess/',
   '/linzess/index.html',
@@ -23,8 +23,15 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// Network-first strategy: always try to get fresh files, fall back to cache only if offline
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

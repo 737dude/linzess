@@ -1090,8 +1090,16 @@ function generateReport(entries) {
 }
 
 // Register service worker for offline support
+// Force-refresh: unregister old service workers, clear caches, register fresh
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    const unregAll = regs.map(r => r.unregister());
+    return Promise.all(unregAll);
+  }).then(() => {
+    return caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+  }).then(() => {
+    navigator.serviceWorker.register('sw.js?v=3');
+  }).catch(() => {});
 }
 
 // Initial render
