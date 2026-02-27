@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Linzess">
+<title>Linzess Effects Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --primary: #4a7c8a;
+    --primary-light: #e8f4f7;
+    --primary-dark: #365c67;
+    --accent: #e8913a;
+    --accent-light: #fef3e7;
+    --bg: #f7f9fa;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #dce4e8;
+    --danger: #c0392b;
+    --danger-light: #fdeaea;
+    --success: #27ae60;
+    --success-light: #e8f8f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  .app-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 20px 20px 16px;
+    text-align: center;
+    padding-top: calc(env(safe-area-inset-top, 20px) + 12px);
+  }
+  .app-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+  .app-header p { font-size: 12px; opacity: 0.85; }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 14px; }
+
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 6px rgba(74,124,138,0.3);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* Form elements */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .sublabel {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 400;
+  }
+  input[type="time"], input[type="date"], input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .row { display: flex; gap: 10px; }
+  .row > .field { flex: 1; }
+
+  /* Bristol scale selector */
+  .bristol-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .bristol-btn {
+    aspect-ratio: 1;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+  }
+  .bristol-btn span { font-size: 8px; font-weight: 400; }
+  .bristol-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+  }
+
+  /* Urgency selector */
+  .urgency-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .urgency-btn {
+    padding: 8px 4px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .urgency-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  /* Completeness selector */
+  .complete-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .complete-btn {
+    padding: 8px 4px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .complete-btn.selected {
+    border-color: var(--success);
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-danger { background: var(--danger-light); color: var(--danger); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; width: auto; }
+
+  /* BM log entries */
+  .bm-entry {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .bm-entry-info { flex: 1; }
+  .bm-entry-time { font-weight: 600; font-size: 14px; }
+  .bm-entry-details { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .bm-entry-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-bristol { background: var(--primary-light); color: var(--primary-dark); }
+  .tag-urgency { background: var(--accent-light); color: var(--accent); }
+  .tag-complete { background: var(--success-light); color: var(--success); }
+  .tag-strain { background: #f3e8ff; color: #7c3aed; }
+  .bm-delete {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* History list */
+  .history-item {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .history-date { font-weight: 600; font-size: 15px; }
+  .history-summary { font-size: 13px; color: var(--text-light); margin-top: 3px; }
+  .history-stats { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+  .history-stat { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+
+  /* Detail view */
+  .detail-back {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .detail-section { margin-bottom: 16px; }
+  .detail-label { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+  /* Export */
+  .export-box {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* Checkbox row */
+  .check-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .check-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+  .actions-row { display: flex; gap: 8px; margin-top: 10px; }
+  .actions-row .btn { flex: 1; }
+
+  /* Data management banner */
+  .data-banner {
+    background: var(--primary-light);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .data-banner-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* Status toast */
+  .toast {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .hidden { display: none; }
+
+  @media (max-width: 400px) {
+    .bristol-grid { grid-template-columns: repeat(7, 1fr); }
+    .bristol-btn { font-size: 14px; }
+    .bristol-btn span { font-size: 7px; }
+    .urgency-grid { grid-template-columns: repeat(5, 1fr); }
+    .urgency-btn { font-size: 10px; padding: 7px 2px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>Linzess Effects Tracker</h1>
+  <p>Daily log for your GI doctor</p>
+</div>
+
+<div class="container" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ========= DATA LAYER =========
+// Data is stored both in localStorage (for quick access) AND can be
+// exported/imported via JSON file for sharing with Claude or syncing.
+// The JSON file is the source of truth for your iCloud folder.
+
+const DATA_VERSION = 1;
+
+function getDefaultData() {
+  return { version: DATA_VERSION, entries: [] };
+}
+
+let appData = getDefaultData();
+
+// Load from localStorage on startup
+try {
+  const saved = localStorage.getItem('linzess_tracker_v2');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    appData = { ...getDefaultData(), ...parsed };
+  }
+} catch(e) {}
+
+function persistLocal() {
+  try { localStorage.setItem('linzess_tracker_v2', JSON.stringify(appData)); } catch(e) {}
+}
+
+function saveEntry(entry) {
+  appData.entries = appData.entries.filter(e => e.date !== entry.date);
+  appData.entries.push(JSON.parse(JSON.stringify(entry)));
+  appData.entries.sort((a,b) => a.date.localeCompare(b.date));
+  persistLocal();
+}
+
+function deleteEntryByDate(date) {
+  appData.entries = appData.entries.filter(e => e.date !== date);
+  persistLocal();
+}
+
+function getEntry(date) {
+  return appData.entries.find(e => e.date === date) || null;
+}
+
+function getAllEntries() {
+  return [...appData.entries];
+}
+
+// Export all data as JSON (for saving to iCloud)
+function exportDataJSON() {
+  return JSON.stringify(appData, null, 2);
+}
+
+// Import data from JSON (from iCloud file)
+function importDataJSON(jsonStr) {
+  const parsed = JSON.parse(jsonStr);
+  if (!parsed.entries || !Array.isArray(parsed.entries)) {
+    throw new Error('Invalid data format');
+  }
+  // Merge: keep newer version of each date
+  const existingMap = {};
+  appData.entries.forEach(e => { existingMap[e.date] = e; });
+  parsed.entries.forEach(e => {
+    // Always take the imported version (or merge by last-modified if we add that later)
+    existingMap[e.date] = e;
+  });
+  appData.entries = Object.values(existingMap).sort((a,b) => a.date.localeCompare(b.date));
+  appData.version = DATA_VERSION;
+  persistLocal();
+}
+
+// ========= APP STATE =========
+let state = {
+  tab: 'today',
+  today: getBlankDay(),
+  bmFormOpen: false,
+  bmEdit: null,
+  detailIndex: null,
+};
+
+function getBlankDay() {
+  return {
+    date: new Date().toISOString().slice(0,10),
+    wakeTime: '',
+    linzessTime: '',
+    linzessDose: '290',
+    firstMealTime: '',
+    bms: [],
+    abdominalPain: '',
+    bloating: '',
+    overallNotes: '',
+  };
+}
+
+function getBlankBM() {
+  return {
+    time: new Date().toTimeString().slice(0,5),
+    bristol: null,
+    urgency: null,
+    completeness: null,
+    straining: false,
+    mucus: false,
+    blood: false,
+    pain_during: false,
+    notes: ''
+  };
+}
+
+// Load today's entry if it exists
+const todayExisting = getEntry(state.today.date);
+if (todayExisting) {
+  state.today = { ...todayExisting };
+}
+
+// ========= RENDER =========
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+
+  html += `<div class="tabs">
+    <button class="tab-btn ${state.tab==='today'?'active':''}" onclick="setTab('today')">Today</button>
+    <button class="tab-btn ${state.tab==='history'?'active':''}" onclick="setTab('history')">History</button>
+    <button class="tab-btn ${state.tab==='data'?'active':''}" onclick="setTab('data')">Data</button>
+  </div>`;
+
+  if (state.tab === 'today') html += renderToday();
+  else if (state.tab === 'history') html += renderHistory();
+  else if (state.tab === 'data') html += renderData();
+
+  app.innerHTML = html;
+}
+
+function renderToday() {
+  const t = state.today;
+  let h = '';
+
+  // Date
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:var(--primary-light)">&#128197;</div> Date</div>
+    <div class="field">
+      <input type="date" value="${t.date}" onchange="updateToday('date', this.value)">
+    </div>
+  </div>`;
+
+  // Morning routine
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:#fef3e7">&#9728;&#65039;</div> Morning Routine</div>
+    <div class="row">
+      <div class="field">
+        <label>Wake Time</label>
+        <input type="time" value="${t.wakeTime}" onchange="updateToday('wakeTime', this.value)">
+      </div>
+      <div class="field">
+        <label>Linzess Taken</label>
+        <input type="time" value="${t.linzessTime}" onchange="updateToday('linzessTime', this.value)">
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field">
+        <label>Dose (mcg)</label>
+        <select onchange="updateToday('linzessDose', this.value)">
+          <option value="72" ${t.linzessDose==='72'?'selected':''}>72 mcg</option>
+          <option value="145" ${t.linzessDose==='145'?'selected':''}>145 mcg</option>
+          <option value="290" ${t.linzessDose==='290'?'selected':''}>290 mcg</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>First Meal</label>
+        <input type="time" value="${t.firstMealTime}" onchange="updateToday('firstMealTime', this.value)">
+      </div>
+    </div>
+    ${t.linzessTime && t.firstMealTime ? `<div style="margin-top:10px;font-size:12px;color:var(--text-light)">
+      Meal gap: <strong style="color:var(--text)">${calcGap(t.linzessTime, t.firstMealTime)}</strong> after Linzess
+      ${calcGapMins(t.linzessTime, t.firstMealTime) < 30 ? '<span style="color:var(--danger)"> (recommended: 30+ min)</span>' : '<span style="color:var(--success)"> &#10003;</span>'}
+    </div>` : ''}
+  </div>`;
+
+  // Bowel Movements
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:var(--success-light)">&#128203;</div> Bowel Movements</div>`;
+
+  if (t.bms.length === 0 && !state.bmFormOpen) {
+    h += `<div style="text-align:center;padding:14px 0;color:var(--text-light);font-size:13px">No bowel movements logged yet</div>`;
+  }
+
+  t.bms.forEach((bm, i) => {
+    const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+    const compLabels = ['Incomplete','Partial','Complete'];
+    const timeSinceDose = t.linzessTime ? calcGap(t.linzessTime, bm.time) : '';
+    h += `<div class="bm-entry">
+      <div class="bm-entry-info">
+        <div class="bm-entry-time">${formatTime(bm.time)}${timeSinceDose ? ` <span style="font-weight:400;font-size:12px;color:var(--text-light)">(${timeSinceDose} post-dose)</span>` : ''}</div>
+        <div class="bm-entry-tags">
+          ${bm.bristol ? `<span class="tag tag-bristol">Bristol ${bm.bristol}</span>` : ''}
+          ${bm.urgency !== null ? `<span class="tag tag-urgency">${urgLabels[bm.urgency]}</span>` : ''}
+          ${bm.completeness !== null ? `<span class="tag tag-complete">${compLabels[bm.completeness]}</span>` : ''}
+          ${bm.straining ? '<span class="tag tag-strain">Straining</span>' : ''}
+          ${bm.mucus ? '<span class="tag" style="background:#e0f2fe;color:#0369a1">Mucus</span>' : ''}
+          ${bm.blood ? '<span class="tag" style="background:var(--danger-light);color:var(--danger)">Blood</span>' : ''}
+          ${bm.pain_during ? '<span class="tag" style="background:#fef3c7;color:#d97706">Pain</span>' : ''}
+        </div>
+        ${bm.notes ? `<div class="bm-entry-details">${escHtml(bm.notes)}</div>` : ''}
+      </div>
+      <button class="bm-delete" onclick="deleteBM(${i})" title="Remove">&times;</button>
+    </div>`;
+  });
+
+  if (state.bmFormOpen) {
+    h += renderBMForm();
+  } else {
+    h += `<button class="btn btn-outline" style="margin-top:8px" onclick="openBMForm()">+ Log Bowel Movement</button>`;
+  }
+  h += `</div>`;
+
+  // Daily symptoms
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:#fef3c7">&#9888;&#65039;</div> Daily Symptoms</div>
+    <div class="field">
+      <label>Abdominal Pain (0-10)</label>
+      <div style="display:flex;gap:3px">${[0,1,2,3,4,5,6,7,8,9,10].map(n =>
+        `<button style="flex:1;padding:7px 0;border:1.5px solid ${t.abdominalPain===String(n)?'var(--accent)':'var(--border)'};border-radius:8px;background:${t.abdominalPain===String(n)?'var(--accent-light)':'white'};color:${t.abdominalPain===String(n)?'var(--accent)':'var(--text-light)'};font-size:13px;font-weight:${t.abdominalPain===String(n)?'600':'400'};cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="updateToday('abdominalPain','${n}')">${n}</button>`
+      ).join('')}</div>
+    </div>
+    <div class="field">
+      <label>Bloating (0-10)</label>
+      <div style="display:flex;gap:3px">${[0,1,2,3,4,5,6,7,8,9,10].map(n =>
+        `<button style="flex:1;padding:7px 0;border:1.5px solid ${t.bloating===String(n)?'var(--primary)':'var(--border)'};border-radius:8px;background:${t.bloating===String(n)?'var(--primary-light)':'white'};color:${t.bloating===String(n)?'var(--primary-dark)':'var(--text-light)'};font-size:13px;font-weight:${t.bloating===String(n)?'600':'400'};cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="updateToday('bloating','${n}')">${n}</button>`
+      ).join('')}</div>
+    </div>
+    <div class="field">
+      <label>Notes for Doctor</label>
+      <textarea placeholder="Diet changes, stress, other meds, symptoms..." onchange="updateToday('overallNotes', this.value)">${escHtml(t.overallNotes)}</textarea>
+    </div>
+  </div>`;
+
+  // Save button
+  const existing = getEntry(t.date);
+  h += `<button class="btn btn-primary" onclick="saveToday()" style="margin-bottom:20px">
+    ${existing ? '&#10003; Update Today\'s Entry' : '&#128190; Save Today\'s Entry'}
+  </button>`;
+
+  return h;
+}
+
+function renderBMForm() {
+  const bm = state.bmEdit || getBlankBM();
+  const bristolDescs = ['','Hard','Lumpy','Cracked','Smooth','Soft','Mushy','Watery'];
+  const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+  const compLabels = ['Incomplete','Partial','Complete'];
+
+  let h = `<div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:10px">
+    <div style="font-weight:600;font-size:14px;margin-bottom:12px">Log Bowel Movement</div>
+    <div class="field">
+      <label>Time</label>
+      <input type="time" id="bm-time" value="${bm.time}">
+    </div>
+    <div class="field">
+      <label>Bristol Stool Scale <span class="sublabel">(1=hard, 7=watery)</span></label>
+      <div class="bristol-grid">
+        ${[1,2,3,4,5,6,7].map(n => `<button class="bristol-btn ${bm.bristol===n?'selected':''}" onclick="setBMField('bristol',${n})">
+          ${n}<span>${bristolDescs[n]}</span>
+        </button>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Urgency</label>
+      <div class="urgency-grid">
+        ${urgLabels.map((l,i) => `<button class="urgency-btn ${bm.urgency===i?'selected':''}" onclick="setBMField('urgency',${i})">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Sense of Completeness</label>
+      <div class="complete-grid">
+        ${compLabels.map((l,i) => `<button class="complete-btn ${bm.completeness===i?'selected':''}" onclick="setBMField('completeness',${i})">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Additional Observations</label>
+      <div class="check-row"><input type="checkbox" id="bm-strain" ${bm.straining?'checked':''}><label for="bm-strain" style="margin:0">Straining required</label></div>
+      <div class="check-row"><input type="checkbox" id="bm-mucus" ${bm.mucus?'checked':''}><label for="bm-mucus" style="margin:0">Mucus present</label></div>
+      <div class="check-row"><input type="checkbox" id="bm-blood" ${bm.blood?'checked':''}><label for="bm-blood" style="margin:0">Blood present</label></div>
+      <div class="check-row"><input type="checkbox" id="bm-pain" ${bm.pain_during?'checked':''}><label for="bm-pain" style="margin:0">Pain during</label></div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <input type="text" id="bm-notes" placeholder="Optional notes..." value="${escHtml(bm.notes)}">
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-outline btn-sm" onclick="closeBMForm()">Cancel</button>
+      <button class="btn btn-accent btn-sm" onclick="saveBM()">Save BM</button>
+    </div>
+  </div>`;
+  return h;
+}
+
+function renderHistory() {
+  let h = '';
+  if (state.detailIndex !== null) return renderDetail();
+
+  const all = getAllEntries().sort((a,b) => b.date.localeCompare(a.date));
+  if (all.length === 0) {
+    h += `<div class="empty-state"><div class="empty-state-icon">&#128203;</div><p>No entries yet. Start tracking on the Today tab.</p></div>`;
+    return h;
+  }
+
+  all.forEach(entry => {
+    const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+    const avgBristol = entry.bms.length > 0 ? (entry.bms.reduce((s,b) => s + (b.bristol||0), 0) / entry.bms.length).toFixed(1) : '-';
+    h += `<div class="history-item" onclick="showDetail('${entry.date}')">
+      <div class="history-date">${formatDate(entry.date)}</div>
+      <div class="history-summary">Linzess ${entry.linzessDose || '?'} mcg${entry.linzessTime ? ' at ' + formatTime(entry.linzessTime) : ''}</div>
+      <div class="history-stats">
+        <div class="history-stat">&#128169; <strong>${entry.bms.length}</strong> BM${entry.bms.length!==1?'s':''}</div>
+        <div class="history-stat">&#128200; Avg Bristol: <strong>${avgBristol}</strong></div>
+        ${entry.abdominalPain ? `<div class="history-stat">Pain: <strong>${entry.abdominalPain}/10</strong></div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  return h;
+}
+
+function renderDetail() {
+  const entry = getEntry(state.detailIndex);
+  if (!entry) { state.detailIndex = null; return renderHistory(); }
+
+  const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+  const compLabels = ['Incomplete','Partial','Complete'];
+  const bristolDescs = ['','Hard lumps','Lumpy sausage','Cracked sausage','Smooth, soft snake','Soft blobs','Mushy, fluffy','Entirely liquid'];
+
+  let h = `<button class="detail-back" onclick="state.detailIndex=null;render()">&#8592; Back to History</button>`;
+  h += `<div class="card">
+    <div class="card-title" style="font-size:18px">${formatDate(entry.date)}</div>
+    <div class="detail-section">
+      <div class="detail-label">Morning</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div><span style="color:var(--text-light);font-size:12px">Wake</span><br><strong>${entry.wakeTime ? formatTime(entry.wakeTime) : '-'}</strong></div>
+        <div><span style="color:var(--text-light);font-size:12px">Linzess</span><br><strong>${entry.linzessTime ? formatTime(entry.linzessTime) : '-'} (${entry.linzessDose || '?'} mcg)</strong></div>
+        <div><span style="color:var(--text-light);font-size:12px">First Meal</span><br><strong>${entry.firstMealTime ? formatTime(entry.firstMealTime) : '-'}</strong></div>
+        ${entry.linzessTime && entry.firstMealTime ? `<div><span style="color:var(--text-light);font-size:12px">Meal Gap</span><br><strong>${calcGap(entry.linzessTime, entry.firstMealTime)}</strong></div>` : ''}
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="detail-section">
+      <div class="detail-label">Bowel Movements (${entry.bms.length})</div>`;
+
+  if (entry.bms.length === 0) {
+    h += `<div style="color:var(--text-light);font-size:13px">None recorded</div>`;
+  }
+  entry.bms.forEach((bm, i) => {
+    h += `<div class="bm-entry">
+      <div class="bm-entry-info">
+        <div class="bm-entry-time">${formatTime(bm.time)}${entry.linzessTime ? ` <span style="font-weight:400;font-size:12px;color:var(--text-light)">(${calcGap(entry.linzessTime, bm.time)} post-dose)</span>` : ''}</div>
+        <div class="bm-entry-tags">
+          ${bm.bristol ? `<span class="tag tag-bristol">Bristol ${bm.bristol} - ${bristolDescs[bm.bristol]}</span>` : ''}
+          ${bm.urgency !== null ? `<span class="tag tag-urgency">${urgLabels[bm.urgency]}</span>` : ''}
+          ${bm.completeness !== null ? `<span class="tag tag-complete">${compLabels[bm.completeness]}</span>` : ''}
+          ${bm.straining ? '<span class="tag tag-strain">Straining</span>' : ''}
+          ${bm.mucus ? '<span class="tag" style="background:#e0f2fe;color:#0369a1">Mucus</span>' : ''}
+          ${bm.blood ? '<span class="tag" style="background:var(--danger-light);color:var(--danger)">Blood</span>' : ''}
+          ${bm.pain_during ? '<span class="tag" style="background:#fef3c7;color:#d97706">Pain</span>' : ''}
+        </div>
+        ${bm.notes ? `<div class="bm-entry-details">${escHtml(bm.notes)}</div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  h += `</div>`;
+
+  if (entry.abdominalPain || entry.bloating) {
+    h += `<hr class="divider"><div class="detail-section">
+      <div class="detail-label">Symptoms</div>
+      <div style="display:flex;gap:20px">
+        ${entry.abdominalPain ? `<div>Abdominal Pain: <strong>${entry.abdominalPain}/10</strong></div>` : ''}
+        ${entry.bloating ? `<div>Bloating: <strong>${entry.bloating}/10</strong></div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  if (entry.overallNotes) {
+    h += `<hr class="divider"><div class="detail-section">
+      <div class="detail-label">Notes</div>
+      <div style="font-size:14px">${escHtml(entry.overallNotes)}</div>
+    </div>`;
+  }
+
+  h += `</div>`;
+  return h;
+}
+
+function renderData() {
+  const entries = getAllEntries();
+  let h = '';
+
+  // Info banner
+  h += `<div class="data-banner">
+    <div class="data-banner-icon">&#9729;&#65039;</div>
+    <div>Save your data as a JSON file to your iCloud Linzess folder. Share it with Claude anytime to get reports, charts, or analysis.</div>
+  </div>`;
+
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:var(--success-light)">&#128229;</div> Save Data File</div>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">${entries.length} day${entries.length!==1?'s':''} of data tracked. Download and save to your iCloud Linzess folder.</p>
+    <button class="btn btn-primary" onclick="downloadJSON()">&#128190; Download linzess-data.json</button>
+  </div>`;
+
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:var(--primary-light)">&#128228;</div> Load Data File</div>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">Load a previously saved JSON file. This merges with any existing data.</p>
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="handleFileLoad(event)">
+    <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">&#128194; Load linzess-data.json</button>
+  </div>`;
+
+  h += `<div class="card">
+    <div class="card-title"><div class="card-icon" style="background:var(--accent-light)">&#128196;</div> Doctor Report</div>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">Copy a formatted text report or download CSV for your appointment.</p>
+    <div class="actions-row">
+      <button class="btn btn-outline btn-sm" onclick="copyReport()">&#128203; Copy Report</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadCSV()">&#128200; Download CSV</button>
+    </div>
+    ${entries.length > 0 ? `<div class="export-box" id="export-text" style="margin-top:12px">${generateReport(entries)}</div>` : ''}
+  </div>`;
+
+  return h;
+}
+
+// ========= ACTIONS =========
+function setTab(tab) { state.tab = tab; state.detailIndex = null; render(); }
+
+function updateToday(field, value) {
+  state.today[field] = value;
+  if (field === 'date') {
+    const existing = getEntry(value);
+    if (existing) {
+      state.today = { ...existing };
+    } else {
+      const keep = { date: value };
+      state.today = { ...getBlankDay(), ...keep };
+    }
+  }
+  render();
+}
+
+function openBMForm() {
+  state.bmFormOpen = true;
+  state.bmEdit = getBlankBM();
+  render();
+}
+
+function closeBMForm() {
+  state.bmFormOpen = false;
+  state.bmEdit = null;
+  render();
+}
+
+function setBMField(field, value) {
+  if (!state.bmEdit) state.bmEdit = getBlankBM();
+  state.bmEdit[field] = state.bmEdit[field] === value ? null : value;
+  render();
+}
+
+function saveBM() {
+  const bm = state.bmEdit || getBlankBM();
+  bm.time = document.getElementById('bm-time').value;
+  bm.straining = document.getElementById('bm-strain').checked;
+  bm.mucus = document.getElementById('bm-mucus').checked;
+  bm.blood = document.getElementById('bm-blood').checked;
+  bm.pain_during = document.getElementById('bm-pain').checked;
+  bm.notes = document.getElementById('bm-notes').value;
+  state.today.bms.push(bm);
+  state.today.bms.sort((a,b) => a.time.localeCompare(b.time));
+  state.bmFormOpen = false;
+  state.bmEdit = null;
+  render();
+}
+
+function deleteBM(index) {
+  state.today.bms.splice(index, 1);
+  render();
+}
+
+function saveToday() {
+  saveEntry(state.today);
+  showToast('Entry saved!');
+  render();
+}
+
+function showDetail(date) { state.detailIndex = date; render(); }
+
+// ========= DATA ACTIONS =========
+function downloadJSON() {
+  // Make sure today is saved first
+  if (state.today.wakeTime || state.today.linzessTime || state.today.bms.length > 0) {
+    saveEntry(state.today);
+  }
+  const blob = new Blob([exportDataJSON()], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'linzess-data.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Data file downloaded!');
+}
+
+function handleFileLoad(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      importDataJSON(e.target.result);
+      // Reload today
+      const todayEntry = getEntry(state.today.date);
+      if (todayEntry) state.today = { ...todayEntry };
+      showToast(`Data loaded! ${getAllEntries().length} days total.`);
+      render();
+    } catch(err) {
+      showToast('Error loading file. Check format.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function downloadCSV() {
+  const entries = getAllEntries().sort((a,b) => a.date.localeCompare(b.date));
+  if (entries.length === 0) { showToast('No data to export'); return; }
+  const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+  const compLabels = ['Incomplete','Partial','Complete'];
+
+  let csv = 'Date,Wake Time,Linzess Time,Dose (mcg),First Meal,Meal Gap (min),BM #,BM Time,Time Post-Dose (min),Bristol Scale,Urgency,Completeness,Straining,Mucus,Blood,Pain During,BM Notes,Abdominal Pain (0-10),Bloating (0-10),Daily Notes\n';
+
+  entries.forEach(entry => {
+    const mealGap = entry.linzessTime && entry.firstMealTime ? calcGapMins(entry.linzessTime, entry.firstMealTime) : '';
+    if (entry.bms.length === 0) {
+      csv += `${entry.date},${entry.wakeTime},${entry.linzessTime},${entry.linzessDose},${entry.firstMealTime},${mealGap},0,,,,,,,,,,"${entry.abdominalPain||''}","${entry.bloating||''}","${csvEsc(entry.overallNotes)}"\n`;
+    }
+    entry.bms.forEach((bm, i) => {
+      const postDose = entry.linzessTime && bm.time ? calcGapMins(entry.linzessTime, bm.time) : '';
+      csv += `${entry.date},${entry.wakeTime},${entry.linzessTime},${entry.linzessDose},${entry.firstMealTime},${mealGap},${i+1},${bm.time},${postDose},${bm.bristol||''},${bm.urgency!==null?urgLabels[bm.urgency]:''},${bm.completeness!==null?compLabels[bm.completeness]:''},${bm.straining?'Yes':'No'},${bm.mucus?'Yes':'No'},${bm.blood?'Yes':'No'},${bm.pain_during?'Yes':'No'},"${csvEsc(bm.notes)}","${i===0?(entry.abdominalPain||''):''}","${i===0?(entry.bloating||''):''}","${i===0?csvEsc(entry.overallNotes):''}" \n`;
+    });
+  });
+
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'linzess_tracker.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV downloaded!');
+}
+
+function copyReport() {
+  const el = document.getElementById('export-text');
+  if (!el) { showToast('No data to copy'); return; }
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('Report copied!'));
+}
+
+// ========= HELPERS =========
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTime(t) {
+  if (!t) return '-';
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+}
+
+function calcGapMins(t1, t2) {
+  const [h1,m1] = t1.split(':').map(Number);
+  const [h2,m2] = t2.split(':').map(Number);
+  let diff = (h2*60+m2) - (h1*60+m1);
+  if (diff < 0) diff += 24*60;
+  return diff;
+}
+
+function calcGap(t1, t2) {
+  let mins = calcGapMins(t1, t2);
+  const h = Math.floor(mins/60);
+  const m = mins % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}hr`;
+  return `${h}hr ${m}min`;
+}
+
+function csvEsc(s) { return String(s||'').replace(/"/g, '""'); }
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function generateReport(entries) {
+  entries = entries.sort((a,b) => a.date.localeCompare(b.date));
+  const urgLabels = ['None','Mild','Moderate','Strong','Urgent'];
+  const compLabels = ['Incomplete','Partial','Complete'];
+  const bristolDescs = ['','Hard lumps','Lumpy sausage','Cracked sausage','Smooth snake','Soft blobs','Mushy','Watery'];
+
+  let r = 'LINZESS EFFECTS TRACKER - PATIENT REPORT\n';
+  r += '==========================================\n';
+  r += `Report generated: ${new Date().toLocaleDateString()}\n`;
+  r += `Date range: ${formatDate(entries[0].date)} - ${formatDate(entries[entries.length-1].date)}\n`;
+  r += `Total days tracked: ${entries.length}\n\n`;
+
+  const totalBMs = entries.reduce((s,e) => s + e.bms.length, 0);
+  const allBristol = entries.flatMap(e => e.bms.filter(b=>b.bristol).map(b=>b.bristol));
+  const avgBristol = allBristol.length > 0 ? (allBristol.reduce((a,b)=>a+b,0)/allBristol.length).toFixed(1) : '-';
+  const avgBMsPerDay = (totalBMs / entries.length).toFixed(1);
+  const painEntries = entries.filter(e => e.abdominalPain);
+  const avgPain = painEntries.length > 0 ? (painEntries.reduce((s,e) => s + Number(e.abdominalPain), 0) / painEntries.length).toFixed(1) : '-';
+
+  r += 'SUMMARY\n-------\n';
+  r += `Avg BMs/day: ${avgBMsPerDay}\n`;
+  r += `Avg Bristol Scale: ${avgBristol}\n`;
+  r += `Avg Abdominal Pain: ${avgPain}/10\n`;
+  r += `Days with blood: ${entries.filter(e=>e.bms.some(b=>b.blood)).length}\n`;
+  r += `Days with mucus: ${entries.filter(e=>e.bms.some(b=>b.mucus)).length}\n\n`;
+
+  r += 'DAILY LOG\n---------\n';
+  entries.forEach(entry => {
+    r += `\n${formatDate(entry.date)}\n`;
+    r += `  Linzess: ${entry.linzessDose||'?'} mcg at ${entry.linzessTime ? formatTime(entry.linzessTime) : '?'}`;
+    r += entry.firstMealTime ? ` | First meal: ${formatTime(entry.firstMealTime)}` : '';
+    r += entry.linzessTime && entry.firstMealTime ? ` (gap: ${calcGap(entry.linzessTime, entry.firstMealTime)})` : '';
+    r += '\n';
+    if (entry.bms.length === 0) { r += '  No bowel movements\n'; }
+    entry.bms.forEach((bm, i) => {
+      r += `  BM #${i+1}: ${formatTime(bm.time)}`;
+      if (bm.bristol) r += ` | Bristol ${bm.bristol} (${bristolDescs[bm.bristol]})`;
+      if (bm.urgency !== null) r += ` | Urgency: ${urgLabels[bm.urgency]}`;
+      if (bm.completeness !== null) r += ` | ${compLabels[bm.completeness]}`;
+      const flags = [];
+      if (bm.straining) flags.push('Straining');
+      if (bm.mucus) flags.push('Mucus');
+      if (bm.blood) flags.push('Blood');
+      if (bm.pain_during) flags.push('Pain');
+      if (flags.length) r += ` | ${flags.join(', ')}`;
+      if (bm.notes) r += ` | "${bm.notes}"`;
+      r += '\n';
+    });
+    if (entry.abdominalPain || entry.bloating) {
+      r += `  Symptoms: `;
+      if (entry.abdominalPain) r += `Pain ${entry.abdominalPain}/10 `;
+      if (entry.bloating) r += `Bloating ${entry.bloating}/10`;
+      r += '\n';
+    }
+    if (entry.overallNotes) r += `  Notes: ${entry.overallNotes}\n`;
+  });
+
+  return escHtml(r);
+}
+
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
