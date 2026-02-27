@@ -550,11 +550,11 @@ function renderToday() {
     <div class="row">
       <div class="field">
         <label>Wake Time</label>
-        <input type="time" value="${t.wakeTime}" onchange="updateField('wakeTime', this.value)">
+        <input type="time" value="${t.wakeTime}" onblur="updateField('wakeTime', this.value)">
       </div>
       <div class="field">
         <label>Linzess Taken</label>
-        <input type="time" value="${t.linzessTime}" onchange="updateField('linzessTime', this.value)">
+        <input type="time" value="${t.linzessTime}" onblur="updateField('linzessTime', this.value)">
       </div>
     </div>
     <div class="row" style="margin-top:10px">
@@ -568,7 +568,7 @@ function renderToday() {
       </div>
       <div class="field">
         <label>First Meal</label>
-        <input type="time" value="${t.firstMealTime}" onchange="updateField('firstMealTime', this.value)">
+        <input type="time" value="${t.firstMealTime}" onblur="updateField('firstMealTime', this.value)">
       </div>
     </div>
     <div id="meal-gap-display">${t.linzessTime && t.firstMealTime ? `<div style="margin-top:10px;font-size:12px;color:var(--text-light)">
@@ -654,7 +654,7 @@ function renderBMForm() {
     <div style="font-weight:600;font-size:14px;margin-bottom:12px">Log Bowel Movement</div>
     <div class="field">
       <label>Time</label>
-      <input type="time" id="bm-time" value="${bm.time}" onchange="if(state.bmEdit) state.bmEdit.time=this.value">
+      <input type="time" id="bm-time" value="${bm.time}" onblur="if(state.bmEdit) state.bmEdit.time=this.value">
     </div>
     <div class="field">
       <label>Bristol Stool Scale <span class="sublabel">(1=hard, 7=watery)</span></label>

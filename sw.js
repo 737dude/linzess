@@ -1,4 +1,4 @@
-const CACHE_NAME = 'linzess-v1';
+const CACHE_NAME = 'linzess-v2';
 const ASSETS = [
   '/linzess/',
   '/linzess/index.html',
