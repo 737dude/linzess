@@ -406,6 +406,15 @@ function getDefaultData() {
 
 let appData = getDefaultData();
 
+// One-time fresh start — clear any old data
+try {
+  if (!localStorage.getItem('linzess_fresh_v2')) {
+    localStorage.removeItem('linzess_tracker_v2');
+    localStorage.removeItem('linzess_tracker');
+    localStorage.setItem('linzess_fresh_v2', '1');
+  }
+} catch(e) {}
+
 // Load from localStorage on startup
 try {
   const saved = localStorage.getItem('linzess_tracker_v2');
@@ -541,17 +550,17 @@ function renderToday() {
     <div class="row">
       <div class="field">
         <label>Wake Time</label>
-        <input type="time" value="${t.wakeTime}" onchange="updateToday('wakeTime', this.value)">
+        <input type="time" value="${t.wakeTime}" onchange="updateField('wakeTime', this.value)">
       </div>
       <div class="field">
         <label>Linzess Taken</label>
-        <input type="time" value="${t.linzessTime}" onchange="updateToday('linzessTime', this.value)">
+        <input type="time" value="${t.linzessTime}" onchange="updateField('linzessTime', this.value)">
       </div>
     </div>
     <div class="row" style="margin-top:10px">
       <div class="field">
         <label>Dose (mcg)</label>
-        <select onchange="updateToday('linzessDose', this.value)">
+        <select onchange="updateField('linzessDose', this.value)">
           <option value="72" ${t.linzessDose==='72'?'selected':''}>72 mcg</option>
           <option value="145" ${t.linzessDose==='145'?'selected':''}>145 mcg</option>
           <option value="290" ${t.linzessDose==='290'?'selected':''}>290 mcg</option>
@@ -559,13 +568,13 @@ function renderToday() {
       </div>
       <div class="field">
         <label>First Meal</label>
-        <input type="time" value="${t.firstMealTime}" onchange="updateToday('firstMealTime', this.value)">
+        <input type="time" value="${t.firstMealTime}" onchange="updateField('firstMealTime', this.value)">
       </div>
     </div>
-    ${t.linzessTime && t.firstMealTime ? `<div style="margin-top:10px;font-size:12px;color:var(--text-light)">
+    <div id="meal-gap-display">${t.linzessTime && t.firstMealTime ? `<div style="margin-top:10px;font-size:12px;color:var(--text-light)">
       Meal gap: <strong style="color:var(--text)">${calcGap(t.linzessTime, t.firstMealTime)}</strong> after Linzess
       ${calcGapMins(t.linzessTime, t.firstMealTime) < 30 ? '<span style="color:var(--danger)"> (recommended: 30+ min)</span>' : '<span style="color:var(--success)"> &#10003;</span>'}
-    </div>` : ''}
+    </div>` : ''}</div>
   </div>`;
 
   // Bowel Movements
@@ -622,7 +631,7 @@ function renderToday() {
     </div>
     <div class="field">
       <label>Notes for Doctor</label>
-      <textarea placeholder="Diet changes, stress, other meds, symptoms..." onchange="updateToday('overallNotes', this.value)">${escHtml(t.overallNotes)}</textarea>
+      <textarea placeholder="Diet changes, stress, other meds, symptoms..." onchange="state.today.overallNotes=this.value">${escHtml(t.overallNotes)}</textarea>
     </div>
   </div>`;
 
@@ -645,7 +654,7 @@ function renderBMForm() {
     <div style="font-weight:600;font-size:14px;margin-bottom:12px">Log Bowel Movement</div>
     <div class="field">
       <label>Time</label>
-      <input type="time" id="bm-time" value="${bm.time}">
+      <input type="time" id="bm-time" value="${bm.time}" onchange="if(state.bmEdit) state.bmEdit.time=this.value">
     </div>
     <div class="field">
       <label>Bristol Stool Scale <span class="sublabel">(1=hard, 7=watery)</span></label>
@@ -676,7 +685,7 @@ function renderBMForm() {
     </div>
     <div class="field">
       <label>Notes</label>
-      <input type="text" id="bm-notes" placeholder="Optional notes..." value="${escHtml(bm.notes)}">
+      <input type="text" id="bm-notes" placeholder="Optional notes..." value="${escHtml(bm.notes)}" onchange="if(state.bmEdit) state.bmEdit.notes=this.value">
     </div>
     <div class="actions-row">
       <button class="btn btn-outline btn-sm" onclick="closeBMForm()">Cancel</button>
@@ -819,6 +828,26 @@ function renderData() {
 
 // ========= ACTIONS =========
 function setTab(tab) { state.tab = tab; state.detailIndex = null; render(); }
+
+// Lightweight update for time/select fields — no full re-render
+function updateField(field, value) {
+  state.today[field] = value;
+  // Update meal gap display without re-rendering
+  const gapEl = document.getElementById('meal-gap-display');
+  if (gapEl) {
+    const t = state.today;
+    if (t.linzessTime && t.firstMealTime) {
+      const gap = calcGap(t.linzessTime, t.firstMealTime);
+      const mins = calcGapMins(t.linzessTime, t.firstMealTime);
+      gapEl.innerHTML = `<div style="margin-top:10px;font-size:12px;color:var(--text-light)">
+        Meal gap: <strong style="color:var(--text)">${gap}</strong> after Linzess
+        ${mins < 30 ? '<span style="color:var(--danger)"> (recommended: 30+ min)</span>' : '<span style="color:var(--success)"> &#10003;</span>'}
+      </div>`;
+    } else {
+      gapEl.innerHTML = '';
+    }
+  }
+}
 
 function updateToday(field, value) {
   state.today[field] = value;
